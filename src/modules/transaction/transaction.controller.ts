@@ -6,13 +6,12 @@ import {
   Patch,
   Param,
   Delete,
-  Res,
   HttpCode,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { Response } from 'express';
 
 @Controller('transaction')
 export class TransactionController {
@@ -33,17 +32,17 @@ export class TransactionController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const transaction = await this.transactionService.findOne(id);
     return transaction;
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
   ) {
-    const updatedTransaction = this.transactionService.update(
+    const updatedTransaction = await this.transactionService.update(
       id,
       updateTransactionDto,
     );
@@ -52,7 +51,7 @@ export class TransactionController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
-    this.transactionService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.transactionService.remove(id);
   }
 }
