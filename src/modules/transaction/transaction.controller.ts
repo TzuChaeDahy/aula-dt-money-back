@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Res,
+  HttpCode,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -18,24 +19,23 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
-  async create(
-    @Body() createTransactionDto: CreateTransactionDto,
-    @Res() res: Response,
-  ) {
+  @HttpCode(201)
+  async create(@Body() createTransactionDto: CreateTransactionDto) {
     const createdTransaction =
       await this.transactionService.create(createTransactionDto);
-    res.status(201).send(createdTransaction);
-    return;
+    return createdTransaction;
   }
 
   @Get()
-  findAll() {
-    return this.transactionService.findAll();
+  async findAll() {
+    const transactions = await this.transactionService.findAll();
+    return transactions;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const transaction = await this.transactionService.findOne(id);
+    return transaction;
   }
 
   @Patch(':id')
@@ -43,11 +43,16 @@ export class TransactionController {
     @Param('id') id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
   ) {
-    return this.transactionService.update(+id, updateTransactionDto);
+    const updatedTransaction = this.transactionService.update(
+      id,
+      updateTransactionDto,
+    );
+    return updatedTransaction;
   }
 
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
-    return this.transactionService.remove(+id);
+    this.transactionService.remove(id);
   }
 }
