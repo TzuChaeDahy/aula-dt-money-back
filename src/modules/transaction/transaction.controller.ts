@@ -8,6 +8,7 @@ import {
   Delete,
   Res,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -16,7 +17,7 @@ import { Response } from 'express';
 
 @Controller('transaction')
 export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(private readonly transactionService: TransactionService) { }
 
   @Post()
   async create(
@@ -30,9 +31,22 @@ export class TransactionController {
   }
 
   @Get()
-  async findAll(@Res() res: Response) {
-    const transactions = await this.transactionService.findAll();
+  async findAll(
+    @Res() res: Response,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    const transactions = await this.transactionService.findAll(
+      Number(skip),
+      Number(take),
+    );
     return res.status(HttpStatus.OK).send(transactions);
+  }
+
+  @Get('summary')
+  async getSummaryTotals(@Res() res: Response) {
+    const totals = await this.transactionService.getOverallTotals();
+    return res.status(HttpStatus.OK).send(totals);
   }
 
   @Get(':id')

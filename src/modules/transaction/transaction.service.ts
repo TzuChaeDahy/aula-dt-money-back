@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { TransactionType } from '@prisma/client';
 
 @Injectable()
 export class TransactionService {
@@ -19,9 +20,42 @@ export class TransactionService {
     return createdTransaction;
   }
 
-  async findAll() {
-    const transactions = await this.prisma.transaction.findMany();
+async findAll(skip?: number, take?: number) {
+    const transactions = await this.prisma.transaction.findMany({
+      skip: skip,
+      take: take,
+    });
     return transactions;
+  }
+
+  async getOverallTotals() {
+    const totalIncomeResult = await this.prisma.transaction.aggregate({
+      _sum: {
+        price: true,
+      },
+      where: {
+        type: TransactionType.INCOME,
+      },
+    });
+
+    const totalOutcomeResult = await this.prisma.transaction.aggregate({
+      _sum: {
+        price: true,
+      },
+      where: {
+        type: TransactionType.OUTCOME,
+      },
+    });
+
+    const totalIncome = totalIncomeResult._sum.price || 0;
+    const totalOutcome = totalOutcomeResult._sum.price || 0;
+    const total = totalIncome - totalOutcome;
+
+    return {
+      totalIncome,
+      totalOutcome,
+      total,
+    };
   }
 
   async findOne(id: string) {
